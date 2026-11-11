@@ -1,0 +1,6 @@
+target-version = "py311"
+line-length = 120
+
+[lint]
+# Explicit rule set so CI results do not change when ruff updates its defaults
+select = ["E", "F", "W", "I", "UP", "B"]
