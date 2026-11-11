@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Lint, security scan, tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -r requirements-dev.txt
+      - name: Lint (ruff)
+        run: ruff check .
+      - name: Static security scan (bandit)
+        run: bandit -q -r Engagement_Manager.py
+      - name: Unit tests, including Parquet
+        run: pytest -q
+
+  stdlib-only:
+    name: Tests without pyarrow (zero-dependency CSV path)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+      - run: pytest -q
+
+  docker:
+    name: Build container image
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t engagement-manager .
+      - name: Smoke test (imports and pyarrow inside the image)
+        run: docker run --rm engagement-manager python -c "import Engagement_Manager as m; assert m.HAVE_PYARROW"
