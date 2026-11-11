@@ -15,7 +15,7 @@ import csv
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 try:  # Parquet support is optional: CSV works with the standard library alone
@@ -81,7 +81,7 @@ class EngagementManager:
     @staticmethod
     def generate_fake_tracks():
         """Returns one batch of fictional track updates, all stamped with the same UTC time."""
-        current_time = datetime.now(timezone.utc).isoformat()
+        current_time = datetime.now(UTC).isoformat()
         return [
             {"timestamp": current_time, "track_id": "TRK-101", "classification": "Hostile",
              "validity": 0.95, "position_x": 34.05, "position_y": -118.24},
@@ -124,7 +124,7 @@ class EngagementManager:
             "track_id": track_id,
             "resource_type": resource_type,
             "status": "Initiated",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         log.info("--- OPERATOR ACTION --- Initiated %s on %s using %s", engagement_id, track_id, resource_type)
         return engagement_id
@@ -137,7 +137,7 @@ class EngagementManager:
     # ── recording ────────────────────────────────────────────────────────────
     def _next_path(self, suffix):
         """Unique UTC-timestamped file name (microseconds, so two writes in one second never collide)."""
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+        stamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S_%f")
         return self.record_dir / f"engagement_{stamp}.{suffix}"
 
     def write_records(self, rows):
